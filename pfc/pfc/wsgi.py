@@ -1,9 +1,8 @@
 """
-WSGI config for pfc project.
+WSGI entrypoint for synchronous HTTP deployment.
 
-It exposes the WSGI callable as a module-level variable named ``application``.
+Exposes ``application`` for Gunicorn/uWSGI and similar servers.
 
-For more information on this file, see
 https://docs.djangoproject.com/en/4.2/howto/deployment/wsgi/
 """
 

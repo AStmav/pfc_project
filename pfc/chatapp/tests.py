@@ -1,3 +1,5 @@
+"""Automated tests for the chat application (placeholder)."""
+
 from django.test import TestCase
 
-# Create your tests here.
+# Add view, service, and model tests as the API stabilizes.

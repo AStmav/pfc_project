@@ -1,9 +1,8 @@
 """
-ASGI config for pfc project.
+ASGI entrypoint for async workers, WebSockets, and Channels.
 
-It exposes the ASGI callable as a module-level variable named ``application``.
+Exposes ``application`` for Daphne, Uvicorn (ASGI mode), etc.
 
-For more information on this file, see
 https://docs.djangoproject.com/en/4.2/howto/deployment/asgi/
 """
 
