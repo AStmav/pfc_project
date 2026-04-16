@@ -2,18 +2,22 @@
 
 from __future__ import annotations
 
+import uuid
+
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.db.models import Prefetch, QuerySet
 
 from .basemodel import BaseModel
+from .choices import UserRole, ConversationKind
 
 
 class User(AbstractUser):
     """Application user extending Django auth; adds email verification flags."""
 
     email = models.EmailField(unique=True)
+    role = models.CharField(max_length=10, choices=UserRole.choices, default=UserRole.MEMBER)
     is_verified = models.BooleanField(default=False)
     is_email_verified = models.BooleanField(default=False)
     is_phone_verified = models.BooleanField(default=False)
@@ -34,13 +38,6 @@ class ConversationManager(models.Manager["Conversation"]):
                 queryset=User.objects.only("id", "username"),
             )
         )
-
-
-class ConversationKind(models.TextChoices):
-    """Enumerates conversation types stored in ``Conversation.kind``."""
-
-    DIRECT = "direct", "Direct (1:1)"
-    GROUP = "group", "Group"
 
 
 class Conversation(BaseModel):
@@ -73,6 +70,7 @@ class Conversation(BaseModel):
 class Message(BaseModel):
     """Single chat message scoped to a conversation and attributed to a sender."""
 
+    uuid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False, db_index=True)
     conversation = models.ForeignKey(
         Conversation,
         related_name="messages",

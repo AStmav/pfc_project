@@ -7,14 +7,14 @@ from django.contrib.auth.models import AbstractBaseUser
 from rest_framework import serializers
 
 from .models import Conversation, ConversationKind, Message, User
-
+from .services import ConversationAccess
 
 class UserSerializer(serializers.ModelSerializer):
     """Read representation of a user for nested API output."""
 
     class Meta:
         model = User
-        fields = ["id", "username", "email"]
+        fields = ["id", "username", "email", "role"]
 
 
 class UserCreateSerializer(serializers.ModelSerializer):
@@ -80,9 +80,24 @@ class CreateConversationSerializer(serializers.Serializer):
         return value
 
 
+class AddParticipantsSerializer(serializers.Serializer):
+    """Body for POST ``/conversations/<id>/participants/`` (admin adds members)."""
+
+    user_ids = serializers.ListField(
+        child=serializers.IntegerField(min_value=1),
+        allow_empty=False,
+    )
+
+    def validate_user_ids(self, value: list[int]) -> list[int]:
+        if len(set(value)) != len(value):
+            raise serializers.ValidationError("Duplicate user ids are not allowed.")
+        return value
+
+
 class MessageSerializer(serializers.ModelSerializer):
     """Message for read APIs; includes sender, optional participant roll-up."""
 
+    id = serializers.UUIDField(source="uuid", read_only=True)
     sender = UserSerializer(read_only=True)
     participants = serializers.SerializerMethodField()
 
@@ -116,16 +131,16 @@ class CreateMessageSerializer(serializers.ModelSerializer):
         fields = ["conversation", "content"]
 
     def validate_conversation(self, conversation: Conversation) -> Conversation:
-        """Verify the request user participates in the chosen conversation."""
+        """Verify the request user may access the chosen conversation (same rules as views)."""
         request = self.context.get("request")
         if request is None:
             raise serializers.ValidationError("Authentication required.")
         user: AbstractBaseUser | None = request.user
         if not user.is_authenticated:
             raise serializers.ValidationError("Authentication required.")
-        if not conversation.participants.filter(pk=user.pk).exists():
+        if not ConversationAccess.user_can_access_conversation(user, conversation):
             raise serializers.ValidationError(
-                "You are not a participant of this conversation."
+                "You are not a participant of this conversation.",
             )
         return conversation
 
