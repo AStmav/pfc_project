@@ -40,8 +40,6 @@ INSTALLED_APPS = [
     'channels',
     'rest_framework',
     'corsheaders',
-    # 'django_filters',  # optional: pip install django-filter; enable filter backends below
-    'django_extensions',
     'rest_framework_simplejwt.token_blacklist',
 ]
 
