@@ -9,12 +9,14 @@ from rest_framework import generics, serializers, status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
+from rest_framework_simplejwt.views import TokenObtainPairView as SimpleJWTTokenObtainPairView
 
 from .models import Conversation, Message, User
 from .serializers import (
     AddParticipantsSerializer,
     ConversationSerializer,
     CreateConversationSerializer,
+    EmailOrUsernameTokenObtainPairSerializer,
     UserCreateSerializer,
     UserSerializer,
     MessageSerializer,
@@ -27,6 +29,12 @@ from .services import (
     create_conversation,
 )
 from .choices import UserRole, ConversationKind
+
+
+class TokenObtainPairView(SimpleJWTTokenObtainPairView):
+    """JWT pair endpoint: ``username`` field accepts username or email."""
+
+    serializer_class = EmailOrUsernameTokenObtainPairSerializer
 
 
 class CreateUserView(generics.CreateAPIView):

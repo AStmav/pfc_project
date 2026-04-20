@@ -5,6 +5,7 @@ from typing import Any
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import AbstractBaseUser
 from rest_framework import serializers
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from .models import Conversation, ConversationKind, Message, User
 from .services import ConversationAccess
@@ -28,6 +29,22 @@ class UserCreateSerializer(serializers.ModelSerializer):
     def create(self, validated_data: dict[str, Any]) -> User:
         """Delegate creation to Django's user manager for correct password hashing."""
         return User.objects.create_user(**validated_data)
+
+
+class EmailOrUsernameTokenObtainPairSerializer(TokenObtainPairSerializer):
+    """
+    SimpleJWT login: the ``username`` field may hold a username or a unique email.
+
+    The parent class still authenticates with the real DB username.
+    """
+
+    def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
+        raw = attrs.get(self.username_field)
+        if isinstance(raw, str) and "@" in raw:
+            user = User.objects.filter(email__iexact=raw.strip()).only("username").first()
+            if user is not None:
+                attrs = {**attrs, self.username_field: getattr(user, self.username_field)}
+        return super().validate(attrs)
 
 
 class UserLoginSerializer(serializers.Serializer):
