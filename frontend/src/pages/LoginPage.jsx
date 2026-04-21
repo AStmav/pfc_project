@@ -42,7 +42,7 @@ export default function LoginPage() {
 
     try {
       await login({
-        // Backend token endpoint currently authenticates by username.
+        // Same field: username or email (backend resolves email to user).
         username: values.identifier,
         password: values.password,
       })

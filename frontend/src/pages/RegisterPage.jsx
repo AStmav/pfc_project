@@ -51,8 +51,7 @@ function passwordStrength(password) {
 function buildUsername({ name, email }) {
   const source = String(name || email.split('@')[0] || 'user')
     .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9_]+/g, '_')
+    .replace(/[^a-zA-Z0-9_.]+/g, '_')
     .replace(/^_+|_+$/g, '')
   if (source) {
     return source.slice(0, 30)
