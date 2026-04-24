@@ -1,3 +1,5 @@
+import { useState } from 'react'
+
 function getInitials(name = '') {
   const parts = String(name).trim().split(/\s+/).filter(Boolean)
   if (!parts.length) {
@@ -13,6 +15,7 @@ export default function AvatarBadge({
   name,
   size = 'md',
   online = false,
+  avatarUrl = '',
   className = '',
 }) {
   const dimensions = {
@@ -20,15 +23,26 @@ export default function AvatarBadge({
     md: 'h-10 w-10 text-sm',
     lg: 'h-12 w-12 text-base',
   }[size]
+  const [failedAvatarUrl, setFailedAvatarUrl] = useState('')
+  const showImage = Boolean(avatarUrl) && avatarUrl !== failedAvatarUrl
 
   return (
     <div className={`relative inline-flex ${className}`}>
-      <div
-        className={`inline-flex ${dimensions} items-center justify-center rounded-full bg-brand-muted font-semibold text-brand`}
-        title={name}
-      >
-        {getInitials(name)}
-      </div>
+      {showImage ? (
+        <img
+          src={avatarUrl}
+          alt={name || 'User avatar'}
+          className={`${dimensions} rounded-full border border-slate-200 object-cover`}
+          onError={() => setFailedAvatarUrl(avatarUrl)}
+        />
+      ) : (
+        <div
+          className={`inline-flex ${dimensions} items-center justify-center rounded-full bg-brand-muted font-semibold text-brand`}
+          title={name}
+        >
+          {getInitials(name)}
+        </div>
+      )}
       {online ? (
         <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-white bg-emerald-500 shadow-sm ring-1 ring-white/80" />
       ) : null}

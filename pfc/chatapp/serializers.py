@@ -1,21 +1,46 @@
 from __future__ import annotations
 
 from typing import Any
-
 from django.contrib.auth import authenticate
+from django.core.files.base import ContentFile
 from django.contrib.auth.models import AbstractBaseUser
+from django.core.files.uploadedfile import UploadedFile
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from .models import Conversation, ConversationKind, Message, User
-from .services import ConversationAccess
+from .services import ConversationAccess, prepare_user_avatar_upload
 
 class UserSerializer(serializers.ModelSerializer):
     """Read representation of a user for nested API output."""
 
+    avatar = serializers.SerializerMethodField()
+
     class Meta:
         model = User
-        fields = ["id", "username", "email", "role"]
+        fields = ["id", "username", "email", "role", "uuid", "avatar"]
+
+    def get_avatar(self, obj: User) -> str | None:
+        if not obj.avatar:
+            return None
+        request = self.context.get("request")
+        url = obj.avatar.url
+        if request is not None:
+            return request.build_absolute_uri(url)
+        return url
+
+class UserAvatarSerializer(serializers.ModelSerializer):
+    """Update the authenticated user's avatar (multipart file upload)."""
+    
+    class Meta:
+        model = User
+        fields = ["avatar"]
+
+    def validate_avatar(self, file: UploadedFile) -> ContentFile:
+        try:
+            return prepare_user_avatar_upload(file)
+        except ValueError as exc:
+            raise serializers.ValidationError(str(exc)) from exc
 
 
 class UserCreateSerializer(serializers.ModelSerializer):

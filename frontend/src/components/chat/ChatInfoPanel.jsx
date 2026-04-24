@@ -42,7 +42,12 @@ export default function ChatInfoPanel({
             key={user.id}
             className="flex items-center gap-3 rounded-xl border border-slate-200 p-2"
           >
-            <AvatarBadge name={user.username} online={online} />
+            <AvatarBadge
+              name={user.username}
+              avatarUrl={user.avatar || ''}
+              online={online}
+            />
+
             <div className="min-w-0">
               <p className="truncate text-sm font-medium text-slate-900">
                 {user.username} {isCurrent ? '(You)' : ''}

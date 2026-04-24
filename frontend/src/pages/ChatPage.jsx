@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Menu, MessageSquarePlus } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
+import { useNavigate } from 'react-router-dom'
 const MotionDiv = motion.div
 import {
   addConversationParticipants,
@@ -46,6 +47,7 @@ function mergeMessage(existingMessages, incomingMessage) {
 
 export default function ChatPage() {
   const { accessToken, logout, isAdmin, currentUser } = useAuth()
+  const navigate = useNavigate()
   const [conversations, setConversations] = useState([])
   const [selectedConversation, setSelectedConversation] = useState(null)
   const [messages, setMessages] = useState([])
@@ -510,7 +512,11 @@ export default function ChatPage() {
         >
           <header className="relative border-b border-slate-200/90 bg-white px-4 py-3">
             <div className="mb-3 flex items-center gap-3">
-              <AvatarBadge name={currentUser?.username || 'User'} online />
+              <AvatarBadge
+                name={currentUser?.username || 'User'}
+                avatarUrl={currentUser?.avatar || ''}
+                online
+              />
               <div className="min-w-0">
                 <p className="truncate text-sm font-semibold text-gray-900">
                   {currentUser?.username || 'User'}
@@ -550,6 +556,13 @@ export default function ChatPage() {
                     <MessageSquarePlus className="h-5 w-5" strokeWidth={2} />
                   </button>
                 )}
+                <button
+                  type="button"
+                  onClick={() => navigate('/profile')}
+                  className="rounded-lg px-2 py-1 text-sm text-gray-500 transition hover:bg-slate-100 hover:text-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/35"
+                >
+                  Profile
+                </button>
                 <button
                   type="button"
                   onClick={logout}

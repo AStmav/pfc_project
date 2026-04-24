@@ -14,3 +14,14 @@ export async function getCurrentUser() {
   const response = await client.get('/auth/me/')
   return response.data
 }
+
+export async function updateCurrentUserAvatar(file) {
+  const formData = new FormData()
+  formData.append('avatar', file)
+  const response = await client.patch('/auth/me/avatar/', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  })
+  return response.data
+}

@@ -10,6 +10,8 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView as SimpleJWTTokenObtainPairView
+from rest_framework.parsers import MultiPartParser, FormParser
+
 
 from .models import Conversation, Message, User
 from .serializers import (
@@ -21,6 +23,7 @@ from .serializers import (
     UserSerializer,
     MessageSerializer,
     CreateMessageSerializer,
+    UserAvatarSerializer,
 )
 from .services import (
     ConversationAccess,
@@ -262,3 +265,18 @@ class MessageRetrieveDestroyView(generics.RetrieveDestroyAPIView):
             self.request.user,
             int(conversation_id),
         )
+
+class UserAvatarUpdateView(generics.UpdateAPIView):
+    """Update users avatar."""
+    permission_classes = [IsAuthenticated]
+    serializer_class = UserAvatarSerializer
+    parser_classes = [MultiPartParser, FormParser]
+
+    def get_object(self) -> User:
+        return self.request.user
+
+    def perform_update(self, serializer: UserAvatarSerializer) -> None:
+        user = self.request.user
+        if user.avatar:
+            user.avatar.delete(save=False)
+        serializer.save()

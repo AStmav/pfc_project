@@ -1,15 +1,66 @@
-
 from __future__ import annotations
 
+import io
 from typing import Sequence
 
+from django.core.files.base import ContentFile
+from django.core.files.uploadedfile import UploadedFile
 from django.db import transaction
+from PIL import Image, ImageOps
 from django.db.models import Count, QuerySet
 from django.shortcuts import get_object_or_404
 from rest_framework.exceptions import PermissionDenied
 
 from .models import Conversation, ConversationKind, Message, User
 from .choices import UserRole
+
+AVATAR_MAX_FILE_BYTES = 5 * 1024 * 1024
+AVATAR_MAX_PIXELS = (512, 512)
+AVATAR_JPEG_QUALITY = 85
+AVATAR_ALLOWED_PIL_FORMATS = frozenset({"JPEG", "PNG", "WEBP"})
+
+
+def prepare_user_avatar_upload(file: UploadedFile) -> ContentFile:
+    """
+    Check size and decode path, then return a square-max bounded JPEG
+    (EXIF orientation applied, no upscaling, white matte for transparency).
+    """
+    if file.size > AVATAR_MAX_FILE_BYTES:
+        raise ValueError("File size is too large. Maximum size is 5MB.")
+
+    file.seek(0)
+    try:
+        img = Image.open(file)
+        img.verify()
+    except Exception:
+        raise ValueError("Invalid image file.")
+
+    file.seek(0)
+    try:
+        img = Image.open(file)
+        img.load()
+    except Exception:
+        raise ValueError("Corrupted image file.")
+
+    if img.format not in AVATAR_ALLOWED_PIL_FORMATS:
+        raise ValueError(
+            "Invalid image format. Allowed formats: JPEG, PNG, WEBP.",
+        )
+
+    img = ImageOps.exif_transpose(img)
+    if img.mode == "P":
+        img = img.convert("RGBA" if "transparency" in img.info else "RGB")
+    if img.mode in ("RGBA", "LA"):
+        base = Image.new("RGB", img.size, (255, 255, 255))
+        base.paste(img, mask=img.split()[-1])
+        img = base
+    elif img.mode != "RGB":
+        img = img.convert("RGB")
+
+    img.thumbnail(AVATAR_MAX_PIXELS, Image.Resampling.LANCZOS)
+    out = io.BytesIO()
+    img.save(out, format="JPEG", quality=AVATAR_JPEG_QUALITY, optimize=True)
+    return ContentFile(out.getvalue(), name="avatar.jpg")
 
 
 def users_share_at_least_one_group(user_a_id: int, user_b_id: int) -> bool:

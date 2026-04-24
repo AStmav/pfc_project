@@ -13,11 +13,18 @@ from .basemodel import BaseModel
 from .choices import UserRole, ConversationKind
 
 
+
+def user_directory_path(instance, filename):
+    ext = filename.split('.')[-1]
+    filename = f"{uuid.uuid4()}.{ext}"
+    return f"user_{instance.uuid}/{filename}"
+
 class User(AbstractUser):
     """Application user extending Django auth; adds email verification flags."""
-
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     email = models.EmailField(unique=True)
     role = models.CharField(max_length=10, choices=UserRole.choices, default=UserRole.MEMBER)
+    avatar = models.ImageField(upload_to=user_directory_path, null=True, blank=True)
     is_verified = models.BooleanField(default=False)
     is_email_verified = models.BooleanField(default=False)
     is_phone_verified = models.BooleanField(default=False)

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { getCurrentUser, loginUser, registerUser } from '../api/auth'
 import {
   clearTokens,
@@ -58,6 +58,21 @@ export function AuthProvider({ children }) {
     return tokens
   }
 
+  const refreshCurrentUser = useCallback(async () => {
+    if (!accessToken) {
+      setCurrentUser(null)
+      return null
+    }
+    try {
+      const profile = await getCurrentUser()
+      setCurrentUser(profile)
+      return profile
+    } catch {
+      setCurrentUser(null)
+      return null
+    }
+  }, [accessToken])
+
   async function register(payload) {
     return registerUser(payload)
   }
@@ -78,9 +93,17 @@ export function AuthProvider({ children }) {
       isAdmin,
       login,
       register,
+      refreshCurrentUser,
       logout,
     }),
-    [accessToken, refreshToken, isAuthenticated, currentUser, isAdmin],
+    [
+      accessToken,
+      refreshToken,
+      isAuthenticated,
+      currentUser,
+      isAdmin,
+      refreshCurrentUser,
+    ],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

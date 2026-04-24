@@ -43,7 +43,11 @@ function MessageBubble({
       }`}
     >
       <div className="flex items-center gap-2">
-        <AvatarBadge name={message.sender?.username ?? 'Unknown'} size="sm" />
+        <AvatarBadge
+          name={message.sender?.username ?? 'Unknown'}
+          avatarUrl={message.sender?.avatar || ''}
+          size="sm"
+        />
         <p className="text-xs opacity-80">{message.sender?.username ?? 'Unknown'}</p>
         {canDeleteMessage?.(message) ? (
           <button

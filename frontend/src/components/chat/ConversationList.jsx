@@ -52,6 +52,10 @@ export default function ConversationList({
       {filteredConversations.map((conversation) => {
         const isSelected = conversation.id === selectedConversationId
         const conversationTitle = getConversationTitle(conversation, currentUserId)
+        const directPeer =
+          conversation.kind === 'direct'
+            ? conversation.participants?.find((user) => user.id !== currentUserId)
+            : null
         return (
           <MotionLi
             key={conversation.id}
@@ -69,7 +73,10 @@ export default function ConversationList({
               }`}
             >
               <div className="flex items-center gap-3">
-                <AvatarBadge name={conversationTitle} />
+                <AvatarBadge
+                  name={conversationTitle}
+                  avatarUrl={directPeer?.avatar || ''}
+                />
                 <div className="min-w-0">
                   <p className="truncate font-medium text-gray-900">{conversationTitle}</p>
                   <p className="mt-1 text-xs uppercase tracking-wide text-gray-500">

@@ -42,6 +42,7 @@ export default function ChatHeader({
                 <AvatarBadge
                   key={user.id}
                   name={user.username}
+                  avatarUrl={user.avatar || ''}
                   size="sm"
                   online={Boolean(onlineMap[user.id])}
                   className="ring-2 ring-white"
