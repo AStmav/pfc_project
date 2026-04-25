@@ -1,7 +1,7 @@
-"""HTTP API views for users and conversations."""
+
+from __future__ import annotations
 
 import logging
-from __future__ import annotations
 
 from typing import Any
 
@@ -259,7 +259,7 @@ class MessageListCreateView(generics.ListCreateAPIView):
                 )
             except Exception as e:
                 logger.error(f"Error sending message to channel layer: {e}")
-                
+
 
         headers = self.get_success_headers(payload)
 
