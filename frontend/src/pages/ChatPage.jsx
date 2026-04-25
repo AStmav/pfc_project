@@ -213,6 +213,22 @@ export default function ChatPage() {
     loadMessages()
   }, [selectedConversation])
 
+  useEffect(() => {
+    if (!selectedConversation) {
+      return undefined
+    }
+    const intervalId = window.setInterval(async () => {
+      try {
+        const payload = await getConversationMessages(selectedConversation.id)
+        const latest = payload.items.slice().reverse()
+        setMessages((prev) => latest.reduce((acc, item) => mergeMessage(acc, item), prev))
+      } catch {
+        // Keep silent here to avoid noisy toasts during background sync.
+      }
+    }, 4000)
+    return () => window.clearInterval(intervalId)
+  }, [selectedConversation])
+
   const handleLoadOlderMessages = useCallback(async () => {
     if (!messagesNextPage || loadingOlderMessages) {
       return
@@ -281,14 +297,6 @@ export default function ChatPage() {
     }
     const text = String(content ?? '').trim()
     if (!text) {
-      return
-    }
-    if (socketState === 'open' && socketRef.current) {
-      socketRef.current.send({
-        type: 'chat_message',
-        message: text,
-      })
-      setError('')
       return
     }
     try {
