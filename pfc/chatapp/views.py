@@ -1,8 +1,12 @@
 """HTTP API views for users and conversations."""
 
+import logging
 from __future__ import annotations
 
 from typing import Any
+
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 
 from django.db.models import QuerySet
 from rest_framework import generics, serializers, status
@@ -33,6 +37,8 @@ from .services import (
     create_conversation,
 )
 from .choices import UserRole, ConversationKind
+
+logger = logging.getLogger(__name__)
 
 
 class TokenObtainPairView(SimpleJWTTokenObtainPairView):
@@ -237,6 +243,23 @@ class MessageListCreateView(generics.ListCreateAPIView):
             context=self.get_serializer_context(),
         )
         payload = read_serializer.data
+
+        channel_layer = get_channel_layer()
+
+        room_group_name = f"chat_{conversation_id}"
+
+        if  channel_layer is not None:
+            try: 
+                async_to_sync(channel_layer.group_send)(
+                    room_group_name,
+                    {
+                        "type": "chat_message",
+                        "payload": payload,
+                    }
+                )
+            except Exception as e:
+                logger.error(f"Error sending message to channel layer: {e}")
+                
 
         headers = self.get_success_headers(payload)
 

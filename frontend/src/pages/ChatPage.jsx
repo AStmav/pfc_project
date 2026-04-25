@@ -37,9 +37,18 @@ function getConversationTitle(conversation, currentUserId) {
 }
 
 function mergeMessage(existingMessages, incomingMessage) {
-  const alreadyExists = existingMessages.some(
-    (message) => message.id === incomingMessage.id,
-  )
+  const incomingId = incomingMessage?.id != null ? String(incomingMessage.id) : null
+  const alreadyExists = existingMessages.some((message) => {
+    const currentId = message?.id != null ? String(message.id) : null
+    if (incomingId && currentId) {
+      return currentId === incomingId
+    }
+    return (
+      message?.timestamp === incomingMessage?.timestamp &&
+      message?.sender?.id === incomingMessage?.sender?.id &&
+      message?.content === incomingMessage?.content
+    )
+  })
   if (alreadyExists) {
     return existingMessages
   }
