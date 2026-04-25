@@ -83,6 +83,7 @@ function MessageListAnimated({
 }) {
   const containerRef = useRef(null)
   const prevLastMessageIdRef = useRef(null)
+  const preserveScrollRef = useRef(null)
 
   useEffect(() => {
     if (loadingOlderMessages) {
@@ -98,21 +99,41 @@ function MessageListAnimated({
     }
   }, [messages, loadingOlderMessages])
 
+  useEffect(() => {
+    if (loadingOlderMessages || !preserveScrollRef.current || !containerRef.current) {
+      return
+    }
+    const snapshot = preserveScrollRef.current
+    const nextHeight = containerRef.current.scrollHeight
+    const delta = nextHeight - snapshot.scrollHeight
+    containerRef.current.scrollTop = snapshot.scrollTop + Math.max(delta, 0)
+    preserveScrollRef.current = null
+  }, [messages, loadingOlderMessages])
+
+  function handleScroll(event) {
+    if (!hasMoreMessages || loadingOlderMessages || !onLoadOlderMessages) {
+      return
+    }
+    if (event.currentTarget.scrollTop <= 48) {
+      preserveScrollRef.current = {
+        scrollTop: event.currentTarget.scrollTop,
+        scrollHeight: event.currentTarget.scrollHeight,
+      }
+      onLoadOlderMessages()
+    }
+  }
+
   return (
     <div
       ref={containerRef}
+      onScroll={handleScroll}
       className="min-h-0 flex-1 overflow-y-auto px-3 py-4 md:px-6"
     >
-      {hasMoreMessages ? (
+      {loadingOlderMessages ? (
         <div className="mb-3 flex justify-center">
-          <button
-            type="button"
-            onClick={onLoadOlderMessages}
-            disabled={loadingOlderMessages}
-            className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {loadingOlderMessages ? 'Loading…' : 'Load older messages'}
-          </button>
+          <p className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600">
+            Loading older messages...
+          </p>
         </div>
       ) : null}
       <ul className="space-y-3">
@@ -157,6 +178,7 @@ function MessageListVirtual({
 }) {
   const parentRef = useRef(null)
   const prevLastMessageIdRef = useRef(null)
+  const preserveScrollRef = useRef(null)
 
   /* TanStack Virtual relies on non-memoizable refs; safe in this isolated list. */
   // eslint-disable-next-line react-hooks/incompatible-library
@@ -182,21 +204,41 @@ function MessageListVirtual({
     rowVirtualizer.scrollToIndex(lastIndex, { align: 'end' })
   }, [messages, loadingOlderMessages, rowVirtualizer])
 
+  useEffect(() => {
+    if (loadingOlderMessages || !preserveScrollRef.current || !parentRef.current) {
+      return
+    }
+    const snapshot = preserveScrollRef.current
+    const nextHeight = parentRef.current.scrollHeight
+    const delta = nextHeight - snapshot.scrollHeight
+    parentRef.current.scrollTop = snapshot.scrollTop + Math.max(delta, 0)
+    preserveScrollRef.current = null
+  }, [messages, loadingOlderMessages])
+
+  function handleScroll(event) {
+    if (!hasMoreMessages || loadingOlderMessages || !onLoadOlderMessages) {
+      return
+    }
+    if (event.currentTarget.scrollTop <= 48) {
+      preserveScrollRef.current = {
+        scrollTop: event.currentTarget.scrollTop,
+        scrollHeight: event.currentTarget.scrollHeight,
+      }
+      onLoadOlderMessages()
+    }
+  }
+
   return (
     <div
       ref={parentRef}
+      onScroll={handleScroll}
       className="min-h-0 flex-1 overflow-y-auto px-3 py-4 md:px-6"
     >
-      {hasMoreMessages ? (
+      {loadingOlderMessages ? (
         <div className="mb-3 flex justify-center">
-          <button
-            type="button"
-            onClick={onLoadOlderMessages}
-            disabled={loadingOlderMessages}
-            className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {loadingOlderMessages ? 'Loading…' : 'Load older messages'}
-          </button>
+          <p className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600">
+            Loading older messages...
+          </p>
         </div>
       ) : null}
       <div
