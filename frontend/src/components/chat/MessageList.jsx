@@ -1,6 +1,6 @@
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { Trash2 } from 'lucide-react'
-import { useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import AvatarBadge from '../ui/AvatarBadge'
 
@@ -81,8 +81,28 @@ function MessageListAnimated({
   loadingOlderMessages,
   onLoadOlderMessages,
 }) {
+  const containerRef = useRef(null)
+  const prevLastMessageIdRef = useRef(null)
+
+  useEffect(() => {
+    if (loadingOlderMessages) {
+      return
+    }
+    const lastMessageId = messages[messages.length - 1]?.id
+    if (!lastMessageId || prevLastMessageIdRef.current === lastMessageId) {
+      return
+    }
+    prevLastMessageIdRef.current = lastMessageId
+    if (containerRef.current) {
+      containerRef.current.scrollTop = containerRef.current.scrollHeight
+    }
+  }, [messages, loadingOlderMessages])
+
   return (
-    <div className="min-h-0 flex-1 overflow-y-auto px-3 py-4 md:px-6">
+    <div
+      ref={containerRef}
+      className="min-h-0 flex-1 overflow-y-auto px-3 py-4 md:px-6"
+    >
       {hasMoreMessages ? (
         <div className="mb-3 flex justify-center">
           <button
@@ -136,6 +156,7 @@ function MessageListVirtual({
   onLoadOlderMessages,
 }) {
   const parentRef = useRef(null)
+  const prevLastMessageIdRef = useRef(null)
 
   /* TanStack Virtual relies on non-memoizable refs; safe in this isolated list. */
   // eslint-disable-next-line react-hooks/incompatible-library
@@ -147,6 +168,19 @@ function MessageListVirtual({
   })
 
   const virtualItems = rowVirtualizer.getVirtualItems()
+
+  useEffect(() => {
+    if (loadingOlderMessages) {
+      return
+    }
+    const lastIndex = messages.length - 1
+    const lastMessageId = messages[lastIndex]?.id
+    if (lastIndex < 0 || prevLastMessageIdRef.current === lastMessageId) {
+      return
+    }
+    prevLastMessageIdRef.current = lastMessageId
+    rowVirtualizer.scrollToIndex(lastIndex, { align: 'end' })
+  }, [messages, loadingOlderMessages, rowVirtualizer])
 
   return (
     <div
