@@ -279,8 +279,20 @@ export default function ChatPage() {
     if (!selectedConversation) {
       return
     }
+    const text = String(content ?? '').trim()
+    if (!text) {
+      return
+    }
+    if (socketState === 'open' && socketRef.current) {
+      socketRef.current.send({
+        type: 'chat_message',
+        message: text,
+      })
+      setError('')
+      return
+    }
     try {
-      const createdMessage = await sendConversationMessage(selectedConversation.id, content)
+      const createdMessage = await sendConversationMessage(selectedConversation.id, text)
       setMessages((prev) => mergeMessage(prev, createdMessage))
       setError('')
     } catch {
