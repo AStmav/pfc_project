@@ -8,6 +8,7 @@ import {
   createConversation,
   deleteConversationMessage,
   getConversationMessages,
+  getConversationMessagesPage,
   getConversations,
   getUsers,
   sendConversationMessage,
@@ -51,6 +52,8 @@ export default function ChatPage() {
   const [conversations, setConversations] = useState([])
   const [selectedConversation, setSelectedConversation] = useState(null)
   const [messages, setMessages] = useState([])
+  const [messagesNextPage, setMessagesNextPage] = useState(null)
+  const [loadingOlderMessages, setLoadingOlderMessages] = useState(false)
   const [typingUser, setTypingUser] = useState('')
   const [onlineMap, setOnlineMap] = useState({})
   const [socketState, setSocketState] = useState('connecting')
@@ -183,20 +186,44 @@ export default function ChatPage() {
     async function loadMessages() {
       if (!selectedConversation) {
         setMessages([])
+        setMessagesNextPage(null)
         return
       }
       setLoadingMessages(true)
       try {
-        const list = await getConversationMessages(selectedConversation.id)
-        setMessages(list)
+        const payload = await getConversationMessages(selectedConversation.id)
+        setMessages(payload.items.slice().reverse())
+        setMessagesNextPage(payload.next)
       } catch {
         setMessages([])
+        setMessagesNextPage(null)
       } finally {
         setLoadingMessages(false)
       }
     }
     loadMessages()
   }, [selectedConversation])
+
+  const handleLoadOlderMessages = useCallback(async () => {
+    if (!messagesNextPage || loadingOlderMessages) {
+      return
+    }
+    setLoadingOlderMessages(true)
+    try {
+      const payload = await getConversationMessagesPage(messagesNextPage)
+      const olderMessages = payload.items.slice().reverse()
+      setMessages((prev) => {
+        const existingIds = new Set(prev.map((item) => item.id))
+        const uniqueOlder = olderMessages.filter((item) => !existingIds.has(item.id))
+        return [...uniqueOlder, ...prev]
+      })
+      setMessagesNextPage(payload.next)
+    } catch {
+      pushToast('Failed to load older messages.', 'error')
+    } finally {
+      setLoadingOlderMessages(false)
+    }
+  }, [messagesNextPage, loadingOlderMessages, pushToast])
 
   useEffect(() => {
     if (!selectedConversation || !accessToken) {
@@ -899,6 +926,9 @@ export default function ChatPage() {
                       canDeleteMessage={canDeleteMessage}
                       onDeleteMessage={setPendingDeleteMessage}
                       deletingMessageId={deletingMessageId}
+                      hasMoreMessages={Boolean(messagesNextPage)}
+                      loadingOlderMessages={loadingOlderMessages}
+                      onLoadOlderMessages={handleLoadOlderMessages}
                     />
                   )}
                 </div>

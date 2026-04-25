@@ -14,6 +14,7 @@ from rest_framework.parsers import MultiPartParser, FormParser
 
 
 from .models import Conversation, Message, User
+from .pagination import MessagePagination
 from .serializers import (
     AddParticipantsSerializer,
     ConversationSerializer,
@@ -187,6 +188,8 @@ class MessageListCreateView(generics.ListCreateAPIView):
     """
 
     permission_classes = [IsAuthenticated]
+    pagination_class = MessagePagination
+
 
     def get_queryset(self) -> QuerySet[Message]:
         """Return messages for the current user in the specified conversation."""

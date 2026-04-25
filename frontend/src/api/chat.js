@@ -33,7 +33,18 @@ export async function getUsers() {
 
 export async function getConversationMessages(conversationId) {
   const response = await client.get(`/conversations/${conversationId}/messages/`)
-  return unwrapPaginated(response.data)
+  return {
+    items: unwrapPaginated(response.data),
+    next: response.data?.next ?? null,
+  }
+}
+
+export async function getConversationMessagesPage(pageUrl) {
+  const response = await client.get(pageUrl)
+  return {
+    items: unwrapPaginated(response.data),
+    next: response.data?.next ?? null,
+  }
 }
 
 export async function createConversation(payload) {

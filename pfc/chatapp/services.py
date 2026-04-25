@@ -349,4 +349,4 @@ class ConversationAccess:
         qs = Message.objects.filter(conversation_id=conversation_id)
         if user.role != UserRole.ADMIN:
             qs = qs.filter(conversation__participants=user)
-        return qs.order_by("timestamp")
+        return qs.order_by("-timestamp", "-id")

@@ -77,9 +77,24 @@ function MessageListAnimated({
   canDeleteMessage,
   onDeleteMessage,
   deletingMessageId,
+  hasMoreMessages,
+  loadingOlderMessages,
+  onLoadOlderMessages,
 }) {
   return (
     <div className="min-h-0 flex-1 overflow-y-auto px-3 py-4 md:px-6">
+      {hasMoreMessages ? (
+        <div className="mb-3 flex justify-center">
+          <button
+            type="button"
+            onClick={onLoadOlderMessages}
+            disabled={loadingOlderMessages}
+            className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {loadingOlderMessages ? 'Loading…' : 'Load older messages'}
+          </button>
+        </div>
+      ) : null}
       <ul className="space-y-3">
         <AnimatePresence initial={false}>
           {messages.map((message) => {
@@ -116,6 +131,9 @@ function MessageListVirtual({
   canDeleteMessage,
   onDeleteMessage,
   deletingMessageId,
+  hasMoreMessages,
+  loadingOlderMessages,
+  onLoadOlderMessages,
 }) {
   const parentRef = useRef(null)
 
@@ -135,6 +153,18 @@ function MessageListVirtual({
       ref={parentRef}
       className="min-h-0 flex-1 overflow-y-auto px-3 py-4 md:px-6"
     >
+      {hasMoreMessages ? (
+        <div className="mb-3 flex justify-center">
+          <button
+            type="button"
+            onClick={onLoadOlderMessages}
+            disabled={loadingOlderMessages}
+            className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {loadingOlderMessages ? 'Loading…' : 'Load older messages'}
+          </button>
+        </div>
+      ) : null}
       <div
         className="relative w-full"
         style={{ height: `${rowVirtualizer.getTotalSize()}px` }}
@@ -177,6 +207,9 @@ export default function MessageList({
   canDeleteMessage,
   onDeleteMessage,
   deletingMessageId,
+  hasMoreMessages = false,
+  loadingOlderMessages = false,
+  onLoadOlderMessages,
 }) {
   if (!messages.length) {
     return (
@@ -196,6 +229,9 @@ export default function MessageList({
         canDeleteMessage={canDeleteMessage}
         onDeleteMessage={onDeleteMessage}
         deletingMessageId={deletingMessageId}
+        hasMoreMessages={hasMoreMessages}
+        loadingOlderMessages={loadingOlderMessages}
+        onLoadOlderMessages={onLoadOlderMessages}
       />
     )
   }
@@ -207,6 +243,9 @@ export default function MessageList({
       canDeleteMessage={canDeleteMessage}
       onDeleteMessage={onDeleteMessage}
       deletingMessageId={deletingMessageId}
+      hasMoreMessages={hasMoreMessages}
+      loadingOlderMessages={loadingOlderMessages}
+      onLoadOlderMessages={onLoadOlderMessages}
     />
   )
 }
